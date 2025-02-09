@@ -2,7 +2,12 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Note } from "@shared/schema";
 import { NoteCard } from "./NoteCard";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Editor } from "./Editor";
 import { TagInput } from "./TagInput";
@@ -17,17 +22,14 @@ interface NoteListProps {
 }
 
 const colors = {
-  
-  lavender: "#F4A460",
-  mint: "#00FF00",
-  sky: "#ff5733 ",
-  lemon: "#66CDAA",
-  peach: "#20B2AA",
-  rose: "#FA8072",
-  lightGreen: "#00FF7F",
-  lightYellow: "#FFFF00",
-  lightPink: "#FF00FF",
-  lightCyan: "#00FFFF",
+  NorthernLights: "#28b5ae",
+  VioletPink: "#ed91e4",
+  Rose: "#e03f6f",
+  LimeGreen: "#1ff065",
+  yellow: "#FFFF00",
+  magenta: "#FF00FF",
+  cyan: "#00FFFF",
+  LightRose: "#fa6b9d",
 };
 
 export function NoteList({ notes, onUpdate, onDelete }: NoteListProps) {
@@ -86,15 +88,19 @@ export function NoteList({ notes, onUpdate, onDelete }: NoteListProps) {
                   <div className="space-y-2">
                     <Input
                       value={tempNote.title}
-                      onChange={e =>
-                        setTempNote(prev => prev ? { ...prev, title: e.target.value } : prev)
+                      onChange={(e) =>
+                        setTempNote((prev) =>
+                          prev ? { ...prev, title: e.target.value } : prev
+                        )
                       }
                       className="text-xl font-bold"
                       placeholder="Note title"
                     />
                     <div className="flex items-center text-sm text-muted-foreground gap-1.5">
                       <Clock className="h-4 w-4" />
-                      <span>Last updated {format(tempNote.updatedAt, "PPpp")}</span>
+                      <span>
+                        Last updated {format(tempNote.updatedAt, "PPpp")}
+                      </span>
                     </div>
                   </div>
                 </DialogTitle>
@@ -102,15 +108,15 @@ export function NoteList({ notes, onUpdate, onDelete }: NoteListProps) {
 
               <Editor
                 content={tempNote.content}
-                onChange={content =>
-                  setTempNote(prev => prev ? { ...prev, content } : prev)
+                onChange={(content) =>
+                  setTempNote((prev) => (prev ? { ...prev, content } : prev))
                 }
               />
 
               <TagInput
                 tags={tempNote.tags}
-                onChange={tags =>
-                  setTempNote(prev => prev ? { ...prev, tags } : prev)
+                onChange={(tags) =>
+                  setTempNote((prev) => (prev ? { ...prev, tags } : prev))
                 }
               />
 
@@ -121,11 +127,17 @@ export function NoteList({ notes, onUpdate, onDelete }: NoteListProps) {
                     <button
                       key={name}
                       className={`w-8 h-8 rounded-full transition-transform hover:scale-110 ${
-                        tempNote.color === name ? 'ring-2 ring-primary ring-offset-2' : ''
+                        tempNote.color === name
+                          ? "ring-2 ring-primary ring-offset-2"
+                          : ""
                       }`}
                       style={{ backgroundColor: hex }}
                       onClick={() => {
-                        setTempNote(prev => prev ? { ...prev, color: name } : prev);
+                        setTempNote((prev) =>
+                          prev
+                            ? { ...prev, color: name as keyof typeof colors }
+                            : prev
+                        );
                       }}
                     />
                   ))}

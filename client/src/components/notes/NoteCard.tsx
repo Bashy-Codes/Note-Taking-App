@@ -15,18 +15,16 @@ interface NoteCardProps {
 }
 
 type NoteColor =
-  | "lavender"
-  | "mint"
-  | "sky"
-  | "lemon"
-  | "peach"
-  | "rose"
-  | "lightGreen"
-  | "lightYellow"
-  | "lightPink"
-  | "lightCyan"
+  | "NorthernLights"
+  | "VioletPink"
+  | "Rose"
+  | "LimeGreen"
+  | "yellow"
+  | "magenta"
+  | "cyan"
+  | "LightRose"
   | null
-  | undefined; 
+  | undefined;
 
 export function NoteCard({ note, onPin, onDelete, onClick }: NoteCardProps) {
   const { toast } = useToast();
@@ -39,32 +37,23 @@ export function NoteCard({ note, onPin, onDelete, onClick }: NoteCardProps) {
     });
   };
 
-
   const gradients: Record<Exclude<NoteColor, null | undefined>, string> = {
-    lavender:
-      "bg-gradient-to-br from-lavender-50 to-lavender-100/80 dark:from-lavender-900/10 dark:to-lavender-800/10 border-lavender-200/50 dark:border-lavender-800/20",
-    mint: "bg-gradient-to-br from-mint-50 to-mint-100/80 dark:from-mint-900/10 dark:to-mint-800/10 border-mint-200/50 dark:border-mint-800/20",
-    sky: "bg-gradient-to-br from-sky-50 to-sky-100/80 dark:from-sky-900/10 dark:to-sky-800/10 border-sky-200/50 dark:border-sky-800/20",
-    lemon:
-      "bg-gradient-to-br from-lemon-50 to-lemon-100/80 dark:from-lemon-900/10 dark:to-lemon-800/10 border-lemon-200/50 dark:border-lemon-800/20",
-    peach:
-      "bg-gradient-to-br from-peach-50 to-peach-100/80 dark:from-peach-900/10 dark:to-peach-800/10 border-peach-200/50 dark:border-peach-800/20",
-    rose: "bg-gradient-to-br from-rose-50 to-rose-100/80 dark:from-rose-900/10 dark:to-rose-800/10 border-rose-200/50 dark:border-rose-800/20",
-    lightGreen:
-      "bg-gradient-to-br from-lightGreen-50 to-lightGreen-100/80 dark:from-lightGreen-900/10 dark:to-lightGreen-800/10 border-lightGreen-200/50 dark:border-lightGreen-800/20",
-    lightYellow:
-      "bg-gradient-to-br from-lightYellow-50 to-lightYellow-100/80 dark:from-lightYellow-900/10 dark:to-lightYellow-800/10 border-lightYellow-200/50 dark:border-lightYellow-800/20",
-    lightPink:
-      "bg-gradient-to-br from-lightPink-50 to-lightPink-100/80 dark:from-lightPink-900/10 dark:to-lightPink-800/10 border-lightPink-200/50 dark:border-lightPink-800/20",
-    lightCyan:
-      "bg-gradient-to-br from-lightCyan-50 to-lightCyan-100/80 dark:from-lightCyan-900/10 dark:to-lightCyan-800/10 border-lightCyan-200/50 dark:border-lightCyan-800/20",
+    NorthernLights: "bg-gradient-to-r from-teal-200 to-teal-500",
+    VioletPink: "bg-gradient-to-r from-violet-200 to-pink-200",
+    Rose: "bg-gradient-to-r from-rose-300 to-rose-500",
+    LimeGreen: "bg-gradient-to-tl from-lime-400 to-green-600",
+    yellow:
+      "bg-yellow-100 dark:bg-yellow-900/50 border-yellow-200/50 dark:border-yellow-800/20",
+    magenta:
+      "bg-pink-100 dark:bg-pink-900/50 border-pink-200/50 dark:border-pink-800/20",
+    cyan: "bg-cyan-100 dark:bg-cyan-900/50 border-cyan-200/50 dark:border-cyan-800/20",
+    LightRose: "bg-gradient-to-r from-rose-400 to-orange-300",
   } as const;
 
-
-  const dateStr = format(note.createdAt, "MMM d, yyyy"); 
+  const dateStr = format(note.createdAt, "MMM d, yyyy");
   const timeAgo = formatDistanceToNow(note.updatedAt, { addSuffix: true });
 
-  const noteColor = note.color as NoteColor; 
+  const noteColor = note.color as NoteColor;
 
   return (
     <motion.div
@@ -77,7 +66,9 @@ export function NoteCard({ note, onPin, onDelete, onClick }: NoteCardProps) {
     >
       <Card
         className={`group cursor-pointer hover:shadow-lg transition-all border h-full ${
-          noteColor && gradients[noteColor] ? gradients[noteColor] : "border-muted" 
+          noteColor && gradients[noteColor]
+            ? gradients[noteColor]
+            : "border-muted"
         }`}
         onClick={onClick}
       >
