@@ -1,6 +1,8 @@
-import { useState } from "react";
+"use client";
+
+import { useState, useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Note } from "@shared/schema";
+import type { Note } from "@shared/schema";
 import { NoteCard } from "./NoteCard";
 import {
   Dialog,
@@ -10,15 +12,23 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Editor } from "./Editor";
-import { TagInput } from "./TagInput";
 import { Button } from "@/components/ui/button";
-import { Save, Clock } from "lucide-react";
-import { format } from "date-fns";
+import { Save, Clock, X } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 
 interface NoteListProps {
   notes: Note[];
   onUpdate: (id: string, updates: Partial<Note>) => void;
   onDelete: (id: string) => void;
+  categories: string[];
 }
 
 const colors = {
@@ -32,32 +42,63 @@ const colors = {
   LightRose: "#fa6b9d",
 };
 
-export function NoteList({ notes, onUpdate, onDelete }: NoteListProps) {
+export function NoteList({
+  notes,
+  onUpdate,
+  onDelete,
+  categories,
+}: NoteListProps) {
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [tempNote, setTempNote] = useState<Note | null>(null);
+  const [wordCount, setWordCount] = useState(0);
+  const { toast } = useToast();
 
   const handleNoteClick = (note: Note) => {
     setSelectedNote(note);
     setTempNote(note);
+    setWordCount(note.content.trim().split(/\s+/).length);
   };
 
   const handleClose = () => {
-    if (tempNote && selectedNote) {
-      onUpdate(selectedNote.id, tempNote);
-    }
     setSelectedNote(null);
     setTempNote(null);
   };
 
-  const sortedNotes = [...notes].sort((a, b) => {
-    if (a.isPinned && !b.isPinned) return -1;
-    if (!a.isPinned && b.isPinned) return 1;
-    return b.updatedAt - a.updatedAt;
-  });
+  const handleSave = () => {
+    if (
+      tempNote &&
+      selectedNote &&
+      JSON.stringify(tempNote) !== JSON.stringify(selectedNote)
+    ) {
+      onUpdate(selectedNote.id, tempNote);
+      toast({
+        title: "Note updated",
+        description: "Your changes have been saved.",
+        variant: "default",
+      });
+    }
+    handleClose();
+  };
+
+  const handleContentChange = (content: string) => {
+    setTempNote((prev) => (prev ? { ...prev, content } : prev));
+  };
+
+  const handleWordCountChange = (count: number) => {
+    setWordCount(count);
+  };
+
+  const sortedNotes = useMemo(() => {
+    return [...notes].sort((a, b) => {
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
+      return b.updatedAt - a.updatedAt;
+    });
+  }, [notes]);
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <AnimatePresence mode="popLayout">
           {sortedNotes.map((note, index) => (
             <motion.div
@@ -79,12 +120,12 @@ export function NoteList({ notes, onUpdate, onDelete }: NoteListProps) {
         </AnimatePresence>
       </div>
 
-      <Dialog open={!!selectedNote} onOpenChange={() => handleClose()}>
+      <Dialog open={!!selectedNote} onOpenChange={handleClose}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           {tempNote && (
             <div className="space-y-6">
               <DialogHeader>
-                <DialogTitle>
+                <DialogTitle className="flex justify-between items-center">
                   <div className="space-y-2">
                     <Input
                       value={tempNote.title}
@@ -99,7 +140,10 @@ export function NoteList({ notes, onUpdate, onDelete }: NoteListProps) {
                     <div className="flex items-center text-sm text-muted-foreground gap-1.5">
                       <Clock className="h-4 w-4" />
                       <span>
-                        Last updated {format(tempNote.updatedAt, "PPpp")}
+                        Last updated{" "}
+                        {formatDistanceToNow(tempNote.updatedAt, {
+                          addSuffix: true,
+                        })}
                       </span>
                     </div>
                   </div>
@@ -108,21 +152,19 @@ export function NoteList({ notes, onUpdate, onDelete }: NoteListProps) {
 
               <Editor
                 content={tempNote.content}
-                onChange={(content) =>
-                  setTempNote((prev) => (prev ? { ...prev, content } : prev))
-                }
+                onChange={handleContentChange}
+                onWordCountChange={handleWordCountChange}
               />
 
-              <TagInput
-                tags={tempNote.tags}
-                onChange={(tags) =>
-                  setTempNote((prev) => (prev ? { ...prev, tags } : prev))
-                }
-              />
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground font-medium bg-primary/10 px-2 py-1 rounded-full">
+                  Word count: {wordCount}
+                </span>
+              </div>
 
               <div className="space-y-4">
                 <h4 className="text-sm font-medium">Note Color</h4>
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-3">
                   {Object.entries(colors).map(([name, hex]) => (
                     <button
                       key={name}
@@ -144,8 +186,31 @@ export function NoteList({ notes, onUpdate, onDelete }: NoteListProps) {
                 </div>
               </div>
 
+              <div className="space-y-4">
+                <h4 className="text-sm font-medium">Category</h4>
+                <Select
+                  value={tempNote.category}
+                  onValueChange={(value) =>
+                    setTempNote((prev) =>
+                      prev ? { ...prev, category: value } : prev
+                    )
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="flex justify-end">
-                <Button onClick={handleClose} className="w-full sm:w-auto">
+                <Button onClick={handleSave} className="w-full sm:w-auto">
                   <Save className="w-4 h-4 mr-2" />
                   Save Changes
                 </Button>

@@ -1,8 +1,16 @@
 import { motion } from "framer-motion";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Pin, Download, Copy, Trash, Clock, Calendar } from "lucide-react";
-import { Note } from "@shared/schema";
+import {
+  Pin,
+  Download,
+  Copy,
+  Trash2,
+  Clock,
+  Calendar,
+  AlertTriangle,
+} from "lucide-react";
+import type { Note } from "@shared/schema";
 import { downloadNote } from "@/lib/storage";
 import { useToast } from "@/hooks/use-toast";
 import { format, formatDistanceToNow } from "date-fns";
@@ -22,22 +30,25 @@ type NoteColor =
   | "yellow"
   | "magenta"
   | "cyan"
-  | "LightRose"
-  | null
-  | undefined;
+  | "LightRose";
 
 export function NoteCard({ note, onPin, onDelete, onClick }: NoteCardProps) {
   const { toast } = useToast();
 
   const copyToClipboard = async () => {
-    await navigator.clipboard.writeText(note.content);
+    const formattedContent = `${note.title}\n\n${note.content.replace(
+      /<[^>]+>/g,
+      ""
+    )}`;
+    await navigator.clipboard.writeText(formattedContent);
     toast({
       title: "Copied to clipboard",
-      description: "Note content has been copied to your clipboard",
+      description: "Note title and content have been copied to your clipboard",
+      variant: "default",
     });
   };
 
-  const gradients: Record<Exclude<NoteColor, null | undefined>, string> = {
+  const gradients: Record<NoteColor, string> = {
     NorthernLights: "bg-gradient-to-r from-teal-200 to-teal-500",
     VioletPink: "bg-gradient-to-r from-violet-200 to-pink-200",
     Rose: "bg-gradient-to-r from-rose-300 to-rose-500",
@@ -48,12 +59,10 @@ export function NoteCard({ note, onPin, onDelete, onClick }: NoteCardProps) {
       "bg-pink-100 dark:bg-pink-900/50 border-pink-200/50 dark:border-pink-800/20",
     cyan: "bg-cyan-100 dark:bg-cyan-900/50 border-cyan-200/50 dark:border-cyan-800/20",
     LightRose: "bg-gradient-to-r from-rose-400 to-orange-300",
-  } as const;
+  };
 
   const dateStr = format(note.createdAt, "MMM d, yyyy");
   const timeAgo = formatDistanceToNow(note.updatedAt, { addSuffix: true });
-
-  const noteColor = note.color as NoteColor;
 
   return (
     <motion.div
@@ -61,14 +70,12 @@ export function NoteCard({ note, onPin, onDelete, onClick }: NoteCardProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      whileHover={{ scale: 1.02 }}
+      whileHover={{ scale: 1.03, transition: { duration: 0.2 } }}
       transition={{ duration: 0.2 }}
     >
       <Card
-        className={`group cursor-pointer hover:shadow-lg transition-all border h-full ${
-          noteColor && gradients[noteColor]
-            ? gradients[noteColor]
-            : "border-muted"
+        className={`group cursor-pointer hover:shadow-lg transition-all ${
+          gradients[note.color as NoteColor] || "bg-white"
         }`}
         onClick={onClick}
       >
@@ -89,22 +96,32 @@ export function NoteCard({ note, onPin, onDelete, onClick }: NoteCardProps) {
               </div>
             </div>
           </div>
-          <div className="flex gap-1.5">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={(e) => {
-                e.stopPropagation();
-                onPin();
-              }}
-              className="opacity-0 group-hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/5 transition-all"
-            >
-              <Pin
-                className={`h-4 w-4 transition-transform ${
-                  note.isPinned ? "fill-primary rotate-45" : ""
-                }`}
-              />
-            </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              onPin();
+            }}
+            className="opacity-70 hover:opacity-100 transition-opacity"
+          >
+            <Pin
+              className={`h-4 w-4 transition-transform ${
+                note.isPinned ? "fill-primary rotate-45" : ""
+              }`}
+            />
+          </Button>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div
+            className="line-clamp-3 text-sm prose dark:prose-invert max-w-none opacity-80"
+            dangerouslySetInnerHTML={{ __html: note.content }}
+          />
+          <span className="text-xs px-2 py-1 rounded-full bg-red-400 text-primary-foreground/80 font-medium">
+            {note.category}
+          </span>
+
+          <div className="flex justify-end gap-2 pt-2">
             <Button
               variant="ghost"
               size="icon"
@@ -112,7 +129,7 @@ export function NoteCard({ note, onPin, onDelete, onClick }: NoteCardProps) {
                 e.stopPropagation();
                 downloadNote(note);
               }}
-              className="opacity-0 group-hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/5 transition-all"
+              className="opacity-0 group-hover:opacity-100 transition-opacity"
             >
               <Download className="h-4 w-4" />
             </Button>
@@ -123,7 +140,7 @@ export function NoteCard({ note, onPin, onDelete, onClick }: NoteCardProps) {
                 e.stopPropagation();
                 copyToClipboard();
               }}
-              className="opacity-0 group-hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/5 transition-all"
+              className="opacity-0 group-hover:opacity-100 transition-opacity"
             >
               <Copy className="h-4 w-4" />
             </Button>
@@ -134,29 +151,11 @@ export function NoteCard({ note, onPin, onDelete, onClick }: NoteCardProps) {
                 e.stopPropagation();
                 onDelete();
               }}
-              className="opacity-0 group-hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/5 hover:text-red-500 transition-all"
+              className="opacity-0 group-hover:opacity-100 hover:text-red-500 transition-opacity"
             >
-              <Trash className="h-4 w-4" />
+              <Trash2 className="h-4 w-4" />
             </Button>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div
-            className="line-clamp-3 text-sm prose dark:prose-invert max-w-none opacity-80"
-            dangerouslySetInnerHTML={{ __html: note.content }}
-          />
-          {note.tags.length > 0 && (
-            <div className="flex gap-2 flex-wrap">
-              {note.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary-foreground/80 font-medium"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
         </CardContent>
       </Card>
     </motion.div>
