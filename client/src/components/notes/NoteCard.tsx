@@ -1,15 +1,7 @@
 import { motion } from "framer-motion";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Pin,
-  Download,
-  Copy,
-  Trash2,
-  Clock,
-  Calendar,
-  AlertTriangle,
-} from "lucide-react";
+import { Pin, Download, Copy, Trash2, Clock, Calendar } from "lucide-react";
 import type { Note } from "@shared/schema";
 import { downloadNote } from "@/lib/storage";
 import { useToast } from "@/hooks/use-toast";
@@ -36,10 +28,9 @@ export function NoteCard({ note, onPin, onDelete, onClick }: NoteCardProps) {
   const { toast } = useToast();
 
   const copyToClipboard = async () => {
-    const formattedContent = `${note.title}\n\n${note.content.replace(
-      /<[^>]+>/g,
-      ""
-    )}`;
+    const formattedContent = `${note.title}
+
+${note.content.replace(/<[^>]+>/g, "")}`;
     await navigator.clipboard.writeText(formattedContent);
     toast({
       title: "Copied to clipboard",
@@ -49,16 +40,16 @@ export function NoteCard({ note, onPin, onDelete, onClick }: NoteCardProps) {
   };
 
   const gradients: Record<NoteColor, string> = {
-    NorthernLights: "bg-gradient-to-r from-teal-200 to-teal-500",
-    VioletPink: "bg-gradient-to-r from-violet-200 to-pink-200",
-    Rose: "bg-gradient-to-r from-rose-300 to-rose-500",
-    LimeGreen: "bg-gradient-to-tl from-lime-400 to-green-600",
+    NorthernLights: "bg-gradient-to-br from-teal-200 to-teal-500",
+    VioletPink: "bg-gradient-to-br from-violet-200 to-pink-200",
+    Rose: "bg-gradient-to-br from-rose-300 to-rose-500",
+    LimeGreen: "bg-gradient-to-br from-lime-400 to-green-600",
     yellow:
-      "bg-yellow-100 dark:bg-yellow-900/50 border-yellow-200/50 dark:border-yellow-800/20",
+      "bg-gradient-to-br from-yellow-100 to-yellow-300 dark:from-yellow-900/50 dark:to-yellow-700/50",
     magenta:
-      "bg-pink-100 dark:bg-pink-900/50 border-pink-200/50 dark:border-pink-800/20",
-    cyan: "bg-cyan-100 dark:bg-cyan-900/50 border-cyan-200/50 dark:border-cyan-800/20",
-    LightRose: "bg-gradient-to-r from-rose-400 to-orange-300",
+      "bg-gradient-to-br from-pink-100 to-pink-300 dark:from-pink-900/50 dark:to-pink-700/50",
+    cyan: "bg-gradient-to-br from-cyan-100 to-cyan-300 dark:from-cyan-900/50 dark:to-cyan-700/50",
+    LightRose: "bg-gradient-to-br from-rose-400 to-orange-300",
   };
 
   const dateStr = format(note.createdAt, "MMM d, yyyy");
@@ -74,14 +65,14 @@ export function NoteCard({ note, onPin, onDelete, onClick }: NoteCardProps) {
       transition={{ duration: 0.2 }}
     >
       <Card
-        className={`group cursor-pointer hover:shadow-lg transition-all ${
-          gradients[note.color as NoteColor] || "bg-white"
-        }`}
+        className={`group cursor-pointer hover:shadow-lg transition-all duration-300 ${
+          gradients[note.color as NoteColor] || "bg-card"
+        } overflow-hidden`}
         onClick={onClick}
       >
-        <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+        <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2 relative">
           <div className="space-y-1.5 flex-1">
-            <h3 className="font-semibold text-xl leading-tight line-clamp-2 group-hover:text-primary transition-colors">
+            <h3 className="font-semibold text-xl leading-tight line-clamp-2 group-hover:text-primary transition-colors duration-300">
               {note.title}
             </h3>
             <div className="flex items-center text-sm text-muted-foreground gap-2">
@@ -103,7 +94,7 @@ export function NoteCard({ note, onPin, onDelete, onClick }: NoteCardProps) {
               e.stopPropagation();
               onPin();
             }}
-            className="opacity-70 hover:opacity-100 transition-opacity"
+            className="opacity-70 hover:opacity-100 transition-opacity absolute top-2 right-2"
           >
             <Pin
               className={`h-4 w-4 transition-transform ${
@@ -117,7 +108,7 @@ export function NoteCard({ note, onPin, onDelete, onClick }: NoteCardProps) {
             className="line-clamp-3 text-sm prose dark:prose-invert max-w-none opacity-80"
             dangerouslySetInnerHTML={{ __html: note.content }}
           />
-          <span className="text-xs px-2 py-1 rounded-full bg-red-400 text-primary-foreground/80 font-medium">
+          <span className="inline-block text-xs px-2 py-1 rounded-full bg-primary/10 text-primary font-medium">
             {note.category}
           </span>
 
@@ -129,7 +120,7 @@ export function NoteCard({ note, onPin, onDelete, onClick }: NoteCardProps) {
                 e.stopPropagation();
                 downloadNote(note);
               }}
-              className="opacity-0 group-hover:opacity-100 transition-opacity"
+              className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
             >
               <Download className="h-4 w-4" />
             </Button>
@@ -140,7 +131,7 @@ export function NoteCard({ note, onPin, onDelete, onClick }: NoteCardProps) {
                 e.stopPropagation();
                 copyToClipboard();
               }}
-              className="opacity-0 group-hover:opacity-100 transition-opacity"
+              className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
             >
               <Copy className="h-4 w-4" />
             </Button>
@@ -151,7 +142,7 @@ export function NoteCard({ note, onPin, onDelete, onClick }: NoteCardProps) {
                 e.stopPropagation();
                 onDelete();
               }}
-              className="opacity-0 group-hover:opacity-100 hover:text-red-500 transition-opacity"
+              className="opacity-0 group-hover:opacity-100 hover:text-destructive transition-opacity duration-300"
             >
               <Trash2 className="h-4 w-4" />
             </Button>
